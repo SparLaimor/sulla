@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import latestVersion from 'latest-version';
 import { Page } from 'puppeteer';
-import { from, interval, timer } from 'rxjs';
+import { from, interval, Observable, timer } from 'rxjs';
 import { map, takeUntil, tap, delay, switchMap } from 'rxjs/operators';
 import { Whatsapp } from '../api/whatsapp';
 import { CreateConfig, defaultOptions } from '../config/create-config';
@@ -43,11 +43,7 @@ export async function create(
   const authenticated = await isAuthenticated(waPage);
 
   // If not authenticated, show QR and wait for scan
-  if (authenticated) {
-    // Wait til inside chat
-    await isInsideChat(waPage).toPromise();
-    spinnies.succeed(`${session}-auth`, { text: 'Authenticated' });
-  } else {
+  if (!authenticated) {
     spinnies.update(`${session}-auth`, {
       text: `Authenticate to continue`,
     });
@@ -65,11 +61,28 @@ export async function create(
     } else {
       grabQRUntilInside(waPage, mergedOptions, session, catchQR);
     }
-
-    // Wait til inside chat
-    await isInsideChat(waPage).toPromise();
-    spinnies.succeed(`${session}-auth`, { text: 'Authenticated' });
   }
+
+  spinnies.succeed(`${session}-auth`, { text: 'Wait til inside chat' });
+
+  // Wait til inside chat
+  const insideChat = await isInsideChat(waPage, mergedOptions.timeoutChatConnection).toPromise().catch(()=> false);
+
+  if (!insideChat) {
+    spinnies.add(`${session}-closing`, { text: 'Page closing' });
+
+    if (waPage) {
+      await waPage.close();
+    }
+    if (waPage.browser) {
+      await waPage.browser().close();
+    }
+    spinnies.succeed(`${session}-closing`, { text: 'Page closed' });
+
+    return null;
+  }
+
+  spinnies.succeed(`${session}-auth`, { text: 'Authenticated' });
 
   spinnies.add(`${session}-inject`, { text: 'Injecting api...' });
   waPage = await injectApi(waPage);
@@ -92,12 +105,12 @@ function grabQRUntilInside(
   catchQR: (qrCode: string, asciiQR: string) => void
 ) {
   const isInside = isInsideChat(waPage);
-  timer(0, options.refreshQR)
+  let refreshQrTimer = timer(0, options.refreshQR)
     .pipe(
       takeUntil(isInside),
       switchMap(() => retrieveQR(waPage))
-    )
-    .subscribe(({ data, asciiQR }) => {
+    );
+   let qrSub = refreshQrTimer.subscribe(({ data, asciiQR }) => {
       if (catchQR) {
         catchQR(data, asciiQR);
       }
@@ -107,10 +120,12 @@ function grabQRUntilInside(
         console.log(asciiQR);
       }
     });
+
+  timer(options.timeoutGrabQR).subscribe(() => qrSub.unsubscribe());
 }
 
 /**
- * Checs for a new versoin of sulla and logs
+ * Checks for a new version of sulla and logs
  */
 function checkSullaVersion(spinnies) {
   latestVersion('sulla').then((latest) => {

@@ -25,7 +25,7 @@ export const needsToScan = (waPage: puppeteer.Page) => {
   );
 };
 
-export const isInsideChat = (waPage: puppeteer.Page) => {
+export const isInsideChat = (waPage: puppeteer.Page, timeout = 0) => {
   return from(
     waPage
       .waitForFunction(
@@ -35,7 +35,7 @@ export const isInsideChat = (waPage: puppeteer.Page) => {
         !!document.getElementsByClassName('app')[0].attributes.tabindex
         `,
         {
-          timeout: 0,
+          timeout: timeout,
         }
       )
       .then(() => true)

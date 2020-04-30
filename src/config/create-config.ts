@@ -6,6 +6,9 @@ export interface CreateConfig {
   browserArgs?: string[];
   logQR?: boolean;
   refreshQR?: number;
+
+  timeoutGrabQR: number;
+  timeoutChatConnection: number;
 }
 
 export const defaultOptions: CreateConfig = {
@@ -16,4 +19,7 @@ export const defaultOptions: CreateConfig = {
   logQR: true,
   browserArgs: [''],
   refreshQR: 30000,
+
+  timeoutGrabQR: 60000,
+  timeoutChatConnection: 70000,
 };
