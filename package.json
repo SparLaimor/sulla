@@ -18,22 +18,9 @@
     "changelog": "auto-changelog -p && git add CHANGELOG.md",
     "release": "read -p 'GITHUB_TOKEN: ' GITHUB_TOKEN && export GITHUB_TOKEN=$GITHUB_TOKEN && release-it"
   },
-  "release-it": {
-    "github": {
-      "release": true
-    }
-  },
-  "auto-changelog": {
-    "commitLimit": false
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pretty-quick --staged"
-    }
-  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/danielcardeenas/sulla.git"
+    "url": "git+https://github.com/SparLaimor/sulla.git"
   },
   "keywords": [
     "whatsapp",
@@ -45,9 +32,6 @@
   ],
   "author": "Daniel Cardenas",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/danielcardeenas/sulla/issues"
-  },
   "homepage": "https://github.com/danielcardeenas/sulla#readme",
   "devDependencies": {
     "@types/node": "^13.11.1",
