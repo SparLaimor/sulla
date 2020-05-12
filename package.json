@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "postinstall": "npm run build",
+    "postinstall": "npm install && npm run build",
     "start": "npm run build:sulla & tsc app.ts && node app.js",
     "build": "npm run build:wapi && npm run build:middleware && npm run build:jsQR && tsc",
     "build:sulla": "tsc",
